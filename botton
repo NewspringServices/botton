@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Primeira Pessoa</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+    input { padding: 10px; font-size: 18px; }
+    button { margin-top: 20px; padding: 20px 60px; font-size: 24px;
+             background-color: #007bff; color: white; border: none; border-radius: 12px; cursor: pointer; }
+    #resultado { margin-top: 30px; font-size: 22px; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+  <h1>Primeira Pessoa a Clicar</h1>
+  <input type="text" id="nome" placeholder="Digite seu nome">
+  <br>
+  <button id="botao">CLICAR</button>
+  <div id="resultado"></div>
+
+  <script>
+    const scriptURL = "COLE_AQUI_A_URL_DO_SEU_WEBAPP"; // URL do Google Apps Script
+
+    document.getElementById("botao").addEventListener("click", async function() {
+      const nome = document.getElementById("nome").value.trim();
+      if (!nome) {
+        alert("Digite seu nome antes de clicar!");
+        return;
+      }
+
+      try {
+        let response = await fetch(scriptURL, {
+          method: "POST",
+          body: new URLSearchParams({ "nome": nome })
+        });
+        let texto = await response.text();
+        document.getElementById("resultado").innerText = texto;
+      } catch (err) {
+        document.getElementById("resultado").innerText = "Erro ao conectar.";
+      }
+    });
+  </script>
+</body>
+</html>
