@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Primeira Pessoa a Clicar</title>
+  <style>
+    :root {
+      --bg: #0f172a;       /* slate-900 */
+      --card: #111827;     /* gray-900 */
+      --text: #e5e7eb;     /* gray-200 */
+      --accent: #2563eb;   /* blue-600 */
+      --accent-pressed: #1d4ed8; /* blue-700 */
+      --muted: #94a3b8;    /* slate-400 */
+      --success: #22c55e;  /* green-500 */
+      --warning: #f59e0b;  /* amber-500 */
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1200px 800px at 70% -10%, #1e293b 0%, var(--bg) 60%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    .card {
+      width: min(680px, 92vw);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: clamp(22px, 3.4vw, 32px);
+      letter-spacing: 0.3px;
+    }
+    p.subtitle {
+      margin: 0 0 22px 0;
+      color: var(--muted);
+      font-size: clamp(14px, 2.6vw, 16px);
+    }
+
+    .row { display: flex; gap: 12px; align-items: center; }
+    .row + .row { margin-top: 14px; }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 14px 16px;
+      font-size: 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(17,24,39,0.7);
+      color: var(--text);
+      outline: none;
+    }
+    input::placeholder { color: #9ca3af; }
+
+    button.big {
+      width: 100%;
+      margin-top: 14px;
+      padding: 22px 24px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: .4px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      background: linear-gradient(180deg, var(--accent), var(--accent-pressed));
+      color: white;
+      transition: transform .04s ease, filter .2s ease;
+      box-shadow: 0 10px 18px rgba(37,99,235,.35);
+    }
+    button.big:active { transform: translateY(1px); filter: brightness(.96); }
+    button.big:disabled { background: #334155; box-shadow: none; cursor: not-allowed; }
+
+    .result {
+      margin-top: 18px;
+      font-size: 18px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.35);
+      color: var(--text);
+    }
+    .result.warn {
+      background: rgba(245,158,11,0.10);
+      border-color: rgba(245,158,11,0.35);
+    }
+    .muted { color: var(--muted); font-size: 14px; margin-top: 10px; }
+
+    .footer { margin-top: 10px; font-size: 12px; color: var(--muted); text-align: center; }
+    .footer code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Primeira Pessoa a Clicar</h1>
+    <p class="subtitle">Digite seu nome e clique. O primeiro nome será fixado neste navegador.</p>
+
+    <div class="row">
+      <input id="nome" type="text" placeholder="Seu nome" autocomplete="name" />
+    </div>
+    
+    <button id="botao" class="big">CLICAR</button>
+
+    <div id="resultado" class="result" style="display:none"></div>
+    <div class="muted">Dica: recarregar a página não apaga o resultado. Use <code>Limpar</code> abaixo se quiser reiniciar neste dispositivo.</div>
+
+    <div class="row" style="margin-top:12px; justify-content:flex-end">
+      <button id="limpar" style="padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:var(--text); cursor:pointer">Limpar</button>
+    </div>
+
+    <div class="footer">Somente HTML + JavaScript (sem servidor). O resultado vale por navegador/dispositivo.</div>
+  </main>
+
+  <script>
+    // Chave usada no armazenamento local do navegador
+    const STORAGE_KEY = "primeira_pessoa_nome";
+
+    const input = document.getElementById("nome");
+    const botao = document.getElementById("botao");
+    const limpar = document.getElementById("limpar");
+    const resultado = document.getElementById("resultado");
+
+    // Ao carregar, verifica se já existe alguém salvo neste navegador
+    const salvo = localStorage.getItem(STORAGE_KEY);
+    if (salvo) {
+      mostrarResultado(`Já temos a primeira pessoa: ${salvo}`, /*warn=*/true);
+      botao.disabled = true;
+    }
+
+    botao.addEventListener("click", () => {
+      const nome = (input.value || "").trim();
+      if (!nome) {
+        alert("Digite seu nome antes de clicar!");
+        input.focus();
+        return;
+      }
+
+      const atual = localStorage.getItem(STORAGE_KEY);
+      if (!atual) {
+        // Salva a primeira pessoa neste navegador
+        localStorage.setItem(STORAGE_KEY, nome);
+        mostrarResultado(`A primeira pessoa foi: ${nome}`);
+        botao.disabled = true;
+      } else {
+        mostrarResultado(`Já temos a primeira pessoa: ${atual}`, /*warn=*/true);
+      }
+    });
+
+    limpar.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      resultado.style.display = "none";
+      input.value = "";
+      botao.disabled = false;
+      input.focus();
+    });
+
+    function mostrarResultado(texto, warn = false) {
+      resultado.textContent = texto;
+      resultado.classList.toggle("warn", warn);
+      resultado.style.display = "block";
+    }
+  </script>
+</body>
+</html>
